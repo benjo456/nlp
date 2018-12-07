@@ -1,0 +1,42 @@
+import nltk
+
+def readIn():
+    #Read in file
+    pass
+
+def splitCorpus():
+    #Split file into header and body
+    pass
+
+def preProcess():
+    #Lemmatize and stemmping, tag paragraphs and sentences
+    pass
+
+def tokenMaker():
+    #Tokenise
+    pass
+
+def trainTagger():
+    #Train tagger on corpus
+    pass
+
+def applyTagger():
+    #Apply tagger for NER
+    pass
+
+def findSpeaker():
+    #use NER and regex to find speaker
+    pass
+
+def findLocation():
+    #use NER and regex to find location
+    pass
+
+def findTimes():
+    #Use regex to find time
+    pass
+
+def tagTopics():
+    #tag topics, will come in helpful later
+    pass
+
