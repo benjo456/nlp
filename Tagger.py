@@ -19,17 +19,17 @@ class Tagger:
         self.pickleFileName = picklePath + str(self.email.fileID) + ".pickle"
 
     def stanford(self,data,typeWanted):
-        print("######### Starting stanford #################")
+        #print("######### Starting stanford #################")
         #tagger = Ner(host='localhost',port=9199)
         #print(word_tokenize(data))
         #tokenisedData = word_tokenize(data)
         #print(tokenisedData)
         try:
             with open(self.pickleFileName, 'rb') as f:
-                print("Loading pickle")
+                #print("Loading pickle")
                 classifiedData = pickle.load(f)
         except:
-            print("Not loading pickle")
+            #print("Not loading pickle")
             tokenisedData = [word_tokenize(sent) for sent in sent_tokenize(data)]
             classifiedData = self.st.tag_sents(tokenisedData)
             with open(self.pickleFileName, 'wb') as f:
@@ -63,7 +63,7 @@ class Tagger:
                         lastTypeWanted = counter
                 elif re.match(titleRegex,entry[0]):
                     lastTitle = entry[0]
-        print("######### Ending stanford #################")
+        #print("######### Ending stanford #################")
         return returnData
 
     def b_tagger(self):
@@ -87,7 +87,8 @@ class Tagger:
                 self.email.stime = stime
                 self.email.etime = etime
             else:
-                print("No time found")
+                #print("No time found")
+                pass
 
     def tagSpeaker(self):
         speakerLinePattern = re.compile(r'(?:Who|Host|Speaker):\s(.*)',flags=re.IGNORECASE)
@@ -128,7 +129,8 @@ class Tagger:
                         self.email.speaker = i
 
             else:
-                print("Unknown host")
+                pass
+                #print("Unknown host")
 
     def tagLocation(self):
         locationLinePattern = re.compile(r'(?:Place|Location|Where):\s(.*)', flags=re.IGNORECASE)
@@ -139,24 +141,24 @@ class Tagger:
             self.email.location = locationLine[0]
         else:
             otherLocationMentions = re.findall(locationPattern, self.email.body)
-            print(otherLocationMentions)
+            #(otherLocationMentions)
             #print(otherLocationMentions)
             ##########Need to adjust these to be either most common other location mention or advanced location ##########
             if otherLocationMentions:
                 #self.email.location = otherLocationMentions[0]
                 indexOfMentionRegex = re.compile(r'\b(Wing|Auditorium|Theatre|Hall|Room|Lab|Building)\b',flags=re.IGNORECASE )
                 mentionInText = re.findall(indexOfMentionRegex,self.email.body)
-                print(mentionInText)
+                #print(mentionInText)
                 wordList = self.email.body.lower().split()
                 wordList = [re.sub(r'[^\w\s]','',x) for x in wordList]
-                print(wordList)
+                #print(wordList)
                 actualIndex = wordList.index(mentionInText[0].lower())
                 wordBefore = wordList[actualIndex-1]
                 try:
                     wordAfter = wordList[actualIndex+1]
                 except:
                     wordAfter = ""
-                print(wordBefore)
+                #print(wordBefore)
                 if wordBefore in ['in', 'at']:
                     actualLocation = mentionInText[0] + wordAfter
                 else:
@@ -164,7 +166,7 @@ class Tagger:
                         actualLocation = "{} {} {}".format(wordBefore.title(),mentionInText[0].title(),wordAfter.title())
                     else:
                         actualLocation = wordBefore.title() +  " " +  mentionInText[0].title()
-                    print("Actual location :" + actualLocation)
+                    #print("Actual location :" + actualLocation)
                 self.email.location = actualLocation
             else:
                 self.email.location = self.advancedTagLocation()

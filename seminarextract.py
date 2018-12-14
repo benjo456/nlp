@@ -80,13 +80,14 @@ def evaluate():
     e.evalResults()
 
 def runOnto():
-    id = 100
-    filename = "C:\\Users\\Ben\\Documents\\NLP\\nltk_data\\seminars_training\\training\\{}.txt".format(id)
-    ev = Evaluator.Evaluator()
-    file = ev.getFileToTag(filename)
-    email = loadInFile(file,id)
-    ont = OntologyTagger.OntologyTagger(email)
-    ont.keyWordsInTopic()
+    for i in range(0, 300):
+        id = i
+        filename = "C:\\Users\\Ben\\Documents\\NLP\\nltk_data\\seminars_training\\training\\{}.txt".format(id)
+        ev = Evaluator.Evaluator()
+        file = ev.getFileToTag(filename)
+        email = loadInFile(file,id)
+        ont = OntologyTagger.OntologyTagger(email)
+        ont.keyWordsInTopic()
 
 
 #evaluate()
