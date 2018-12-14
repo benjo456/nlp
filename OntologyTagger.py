@@ -1,3 +1,4 @@
+import calendar
 import re
 from nltk.tokenize import *
 from nltk import WordNetLemmatizer
@@ -29,57 +30,72 @@ class OntologyTagger:
                 #(names)
         except:
             with open("nameList.pkl", 'wb') as f:
-                names = ['Type','Topic','Fwd','Lecture','Talk']
+                names = ['Type','Topic','Fwd','Lecture','Talk',"Series","Seminar","Seminars","Presentation"] + [x for x in calendar.month_name][1::]
                 pickle.dump(names, f)
         newNames = []
 
         topic = self.findTopicHeader()
         if topic:
-            data = self.email.header + self.email.body
-            tokenisedData = word_tokenize(data)
-            lemmatizer = WordNetLemmatizer()
-            stopwordInTopic = stopwords.words('english')
-            tokenisedData = [lemmatizer.lemmatize(token) for token in tokenisedData]
-            tokenisedData = [token for token in tokenisedData if token not in stopwordInTopic and token.isalpha()]
+            toReturn = self.keyWordBody(names, newNames,self.email.body,topic)
+            if toReturn:
+                return toReturn
+            #return self.keyWordBody(names, newNames,self.email.header + self.email.body)
+        return self.keyWordBody(names, newNames, self.email.header + self.email.body, None)
 
-            picklePath = "C:/Users/Ben/Documents/NLP/nltk_data/pickled/"
-            pickleFileName = picklePath + str(self.email.fileID) + ".pickle"
+    def keyWordBody(self, names, newNames, data, topicSent):
+        #data = self.email.header + self.email.body
+        tokenisedData = word_tokenize(data)
+        lemmatizer = WordNetLemmatizer()
+        stopwordInTopic = stopwords.words('english')
+        tokenisedData = [lemmatizer.lemmatize(token) for token in tokenisedData]
+        tokenisedData = [token for token in tokenisedData if token not in stopwordInTopic and token.isalpha()]
+        picklePath = "C:/Users/Ben/Documents/NLP/nltk_data/pickled/"
+        pickleFileName = picklePath + str(self.email.fileID) + ".pickle"
 
-            try:
-                with open(pickleFileName, 'rb') as f:
-                    #print("Loading pickle")
-                    classifiedData = pickle.load(f)
-                    for i in classifiedData:
-                        for entry in i:
-                            if entry[1] in ['PERSON', 'LOCATION']:
-                                if entry[0] in tokenisedData:
-                                    newNames.append(entry[0])
-                                    #print(entry[0] in tokenisedData)
-                    # print("######### Ending stanford #################")
-            except:
-                pass
+        try:
+            with open(pickleFileName, 'rb') as f:
+                # print("Loading pickle")
+                classifiedData = pickle.load(f)
+                for i in classifiedData:
+                    for entry in i:
+                        if entry[1] in ['PERSON', 'LOCATION']:
+                            if entry[0] in tokenisedData:
+                                newNames.append(entry[0])
+                                # print(entry[0] in tokenisedData)
+                # print("######### Ending stanford #################")
+        except:
+            pass
+        names = names + newNames
+        # print(frequencies.most_common())
+        if topicSent:
+            tokenisedHeader = word_tokenize(topicSent)
+        else:
+            tokenisedHeader = None
 
-            names = names + newNames
+        ''' for i in names:
+                        tokenisedHeader = [x for x in tokenisedHeader if x.lower() != i.lower()]
+                        tokenisedData = [x for x in tokenisedData if x.lower() != i.lower()'''
+        for i in names:
+            if tokenisedHeader:
+                for x in tokenisedHeader:
+                    if i.lower() == x.lower():
+                        tokenisedHeader.remove(x)
+            for y in tokenisedData:
+                if i.lower() == y.lower():
+                    tokenisedData.remove(y)
 
+        frequencies = Counter(tokenisedData)
+        likelyTopics = []
 
-            #print(frequencies.most_common())
-            tokenisedHeader = word_tokenize(self.email.header)
-
-            for i in names:
-                tokenisedHeader = [x for x in tokenisedHeader if x.lower() != i.lower()]
-                tokenisedData = [x for x in tokenisedData if x.lower() != i.lower()]
-
+        if tokenisedHeader:
             headerKeywords = [word for word in tokenisedHeader if word in tokenisedData]
-
-            frequencies = Counter(tokenisedData)
-
-            likelyTopics = []
             for i in frequencies.most_common():
-                #print(i)
                 if i[0] in headerKeywords and len(likelyTopics) < 4:
                     likelyTopics.append(i)
-            print(likelyTopics[0])
+        else:
+            likelyTopics = frequencies.most_common(4)
 
-            with open("nameList.pkl", 'wb') as f:
-                pickle.dump(names, f)
+        with open("nameList.pkl", 'wb') as f:
+            pickle.dump(names, f)
+        return likelyTopics
 
