@@ -1,7 +1,7 @@
 import nltk
 from os import listdir
 from os.path import isfile, join
-import Emails, Tagger, os, Evaluator
+import Emails, Tagger, os, Evaluator, OntologyTagger
 
 from nltk.tag import StanfordNERTagger
 #global email
@@ -79,4 +79,15 @@ def evaluate():
         e = evaluateMeasure("C:\\Users\\Ben\\Documents\\NLP\\nltk_data\\seminars_training\\training\\{}.txt".format(i),ev,i)
     e.evalResults()
 
-evaluate()
+def runOnto():
+    id = 100
+    filename = "C:\\Users\\Ben\\Documents\\NLP\\nltk_data\\seminars_training\\training\\{}.txt".format(id)
+    ev = Evaluator.Evaluator()
+    file = ev.getFileToTag(filename)
+    email = loadInFile(file,id)
+    ont = OntologyTagger.OntologyTagger(email)
+    ont.keyWordsInTopic()
+
+
+#evaluate()
+runOnto()
