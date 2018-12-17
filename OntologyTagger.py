@@ -21,7 +21,7 @@ class OntologyTagger:
         self.tree = tree
         self.categ = []
         self.loadTree()
-        print(self.tree)
+        #print(self.tree)
 
     def findTopicHeader(self):
         email = self.email
@@ -125,22 +125,28 @@ class OntologyTagger:
         maxKeyword = ""
         self.categ = []
         self.traverseTree(self.tree)
-        print(self.categ)
+        #print(self.categ)
         for i in keywords:
-            print(self.tree.keys())
+            #print(self.tree.keys())
             for x in self.categ:
-                print(i[0],x)
                 #s = keyword[0].path_similarity(treeWord[0])
-                s = self.model.similarity(str(i[0]),str(x))
-                print(s)
-                if s > maxSimilarity:
-                    maxSimilarity = s
-                    maxTopic = x
-                    maxKeyword = i[0]
+                cate = word_tokenize(x)
+                for y in cate:
+                    print(i[0], y)
+                    try:
+                        s = self.model.similarity(i[0],y)
+                    except KeyError:
+                        s = 0
+                    print(s)
+                    if s > maxSimilarity:
+                        maxSimilarity = s
+                        maxTopic = y
+                        maxKeyword = i[0]
         print("Results:")
         print(maxKeyword, maxTopic)
         print()
         self.addFileToTreeCat(self.tree,maxTopic)
+        self.printTree(self.tree)
         with open("tree.pkl",'wb') as f:
             pickle.dump(self.tree, f)
             self.categ = []
@@ -148,9 +154,6 @@ class OntologyTagger:
 
     def traverseTree(self,tr):
         for k, v in tr.items():
-            ''' print()
-            print("K: " + str(k))
-            print("V: " + str(v))'''
             if isinstance(v,list):
                 self.categ.append(k)
             if isinstance(v, dict):
@@ -162,17 +165,16 @@ class OntologyTagger:
 
     def addFileToTreeCat(self,t,cat):
         id = self.email.fileID
-        if isinstance(t,list):
-            t.append(cat)
-            return
         for k, v in t.items():
             if k == cat:
-                v.append(id)
-                return
-            elif not v:
-                continue
-            else:
+                if isinstance(v, list):
+                    v.append(id)
+                print("K: " + str(k))
+                print("V: " + str(v))
+            if isinstance(v, dict):
                 self.addFileToTreeCat(v, cat)
+            else:
+                continue
 
     def loadTree(self):
         try:
@@ -184,3 +186,10 @@ class OntologyTagger:
             with open("tree.pkl", 'wb') as f:
                 self.tree = OntologyTree.tree
                 pickle.dump(self.tree, f)
+
+    def printTree(self,tree):
+        #tree = OntologyTree.tree
+        #tree = self.tree
+        pp = pprint.PrettyPrinter(indent=4)
+        pp.pprint(tree)
+        print(json.dumps(tree,indent=4))
