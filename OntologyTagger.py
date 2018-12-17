@@ -1,15 +1,27 @@
 import calendar
 import re
+import warnings
+warnings.filterwarnings(action='ignore', category=UserWarning, module='gensim')
+from os.path import expanduser, join
 from nltk.tokenize import *
 from nltk import WordNetLemmatizer
-from nltk.corpus import stopwords
+from nltk.corpus import stopwords, wordnet, brown
 from collections import Counter
-import pickle
+import pickle, OntologyTree, pprint, json
+
+
+import gensim
 import string
 
+
 class OntologyTagger:
-    def __init__(self,email):
+    def __init__(self,email,model,tree):
         self.email = email
+        self.model = model
+        self.tree = tree
+        self.categ = []
+        self.loadTree()
+        print(self.tree)
 
     def findTopicHeader(self):
         email = self.email
@@ -30,7 +42,7 @@ class OntologyTagger:
                 #(names)
         except:
             with open("nameList.pkl", 'wb') as f:
-                names = ['Type','Topic','Fwd','Lecture','Talk',"Series","Seminar","Seminars","Presentation"] + [x for x in calendar.month_name][1::]
+                names = ['Type','Topic','Fwd','Lecture','Talk',"Series","Seminar","Seminars","Presentation","The"] + [x for x in calendar.month_name][1::]
                 pickle.dump(names, f)
         newNames = []
 
@@ -90,7 +102,7 @@ class OntologyTagger:
         if tokenisedHeader:
             headerKeywords = [word for word in tokenisedHeader if word in tokenisedData]
             for i in frequencies.most_common():
-                if i[0] in headerKeywords and len(likelyTopics) < 4:
+                if i[0] in headerKeywords and len(likelyTopics) < 5:
                     likelyTopics.append(i)
         else:
             likelyTopics = frequencies.most_common(4)
@@ -99,3 +111,76 @@ class OntologyTagger:
             pickle.dump(names, f)
         return likelyTopics
 
+
+    def findOntTreeMatch(self,keywords):
+        self.loadTree()
+        #tree = OntologyTree.tree
+        #tree = self.tree
+        #pp = pprint.PrettyPrinter(indent=4)
+        #pp.pprint(tree)
+        #print(json.dumps(tree,indent=4))
+        matches = {}
+        maxSimilarity = 0
+        maxTopic = 0
+        maxKeyword = ""
+        self.categ = []
+        self.traverseTree(self.tree)
+        print(self.categ)
+        for i in keywords:
+            print(self.tree.keys())
+            for x in self.categ:
+                print(i[0],x)
+                #s = keyword[0].path_similarity(treeWord[0])
+                s = self.model.similarity(str(i[0]),str(x))
+                print(s)
+                if s > maxSimilarity:
+                    maxSimilarity = s
+                    maxTopic = x
+                    maxKeyword = i[0]
+        print("Results:")
+        print(maxKeyword, maxTopic)
+        print()
+        self.addFileToTreeCat(self.tree,maxTopic)
+        with open("tree.pkl",'wb') as f:
+            pickle.dump(self.tree, f)
+            self.categ = []
+        return self.tree
+
+    def traverseTree(self,tr):
+        for k, v in tr.items():
+            ''' print()
+            print("K: " + str(k))
+            print("V: " + str(v))'''
+            if isinstance(v,list):
+                self.categ.append(k)
+            if isinstance(v, dict):
+                #print("Is dict, going deeper")
+                self.traverseTree(v)
+            else:
+                #print("Not dict, continuing)")
+                continue
+
+    def addFileToTreeCat(self,t,cat):
+        id = self.email.fileID
+        if isinstance(t,list):
+            t.append(cat)
+            return
+        for k, v in t.items():
+            if k == cat:
+                v.append(id)
+                return
+            elif not v:
+                continue
+            else:
+                self.addFileToTreeCat(v, cat)
+
+    def loadTree(self):
+        try:
+            with open("tree.pkl", 'rb') as f:
+                # print("Loading pickle")
+                self.tree = pickle.load(f)
+                #(names)
+        except:
+            with open("tree.pkl", 'wb') as f:
+                self.tree = OntologyTree.tree
+                pickle.dump(self.tree, f)

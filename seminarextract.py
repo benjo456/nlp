@@ -1,7 +1,8 @@
 import nltk
 from os import listdir
 from os.path import isfile, join
-import Emails, Tagger, os, Evaluator, OntologyTagger
+import Emails, Tagger, os, Evaluator, OntologyTagger, pprint, OntologyTree
+from gensim.models import Word2Vec, KeyedVectors
 
 from nltk.tag import StanfordNERTagger
 #global email
@@ -80,14 +81,21 @@ def evaluate():
     e.evalResults()
 
 def runOnto():
-    for i in range(300, 485):
+    print("Loading model")
+    model = KeyedVectors.load_word2vec_format(
+        "C:\\Users\\Ben\\Documents\\NLP\\nltk_data\\GoogleNews-vectors-negative300.bin",
+        binary=True)
+    print("Model loaded")
+    for i in range(1, 300):
         id = i
         filename = "C:\\Users\\Ben\\Documents\\NLP\\nltk_data\\seminars_training\\training\\{}.txt".format(id)
         ev = Evaluator.Evaluator()
         file = ev.getFileToTag(filename)
         email = loadInFile(file,id)
-        ont = OntologyTagger.OntologyTagger(email)
-        print(str(id) + ": " + str(ont.keyWordsInTopic()))
+        tree = OntologyTree.tree
+        ont = OntologyTagger.OntologyTagger(email,model,tree)
+        tree = ont.findOntTreeMatch(ont.keyWordsInTopic())
+
 
 
 #evaluate()
