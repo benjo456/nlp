@@ -2,27 +2,18 @@ import nltk
 from os import listdir
 from os.path import isfile, join
 import Emails, Tagger, os, Evaluator, OntologyTagger, pprint, OntologyTree
-from gensim.models import Word2Vec, KeyedVectors
+from gensim.models import KeyedVectors
 
 from nltk.tag import StanfordNERTagger
-#global email
 '''
 This program takes in a file, processes it and tags it, and then returns the extracted information to file
 '''
-'''
-#This ideally needs to be done in a different file
-def readIn(mypath, corpus_root):
-    #Read in files
-    onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
-    corpus = nltk.corpus.reader.plaintext.PlaintextCorpusReader(corpus_root, onlyfiles)
-    #Create email object, with header and body
-    preProcess(corpus)
-'''
 
 dir = 'C:/Users/Ben/Documents/NLP/nltk_data/stanford-ner-2018-10-16'
+dataDir = 'C:\\Users\\Ben\\PycharmProjects\\nlp\\nltk_data'
 model = dir + '/classifiers/english.all.3class.distsim.crf.ser.gz'
 jar = dir + '/stanford-ner.jar'
-st = StanfordNERTagger(model, jar, encoding='utf-8')
+st = None
 
 def splitCorpus(content,id):
     #Split file into header and body
@@ -34,9 +25,8 @@ def splitCorpus(content,id):
         email = Emails.Email(body, header,id)
         return email
 
-
 def tagTheEmail(email):
-    tagger = Tagger.Tagger(email,st)
+    tagger = Tagger.Tagger(email,st,dataDir)
     tagger.tagTimes(email)
     tagger.tagSpeaker()
     tagger.tagSent()
@@ -44,14 +34,13 @@ def tagTheEmail(email):
     tagger.tagPara()
     email.combineTogether()
 
-def tagTopics():
-    #tag topics, will come in helpful later
-    pass
-
 def writeNewFile(filename,email):
     filename = os.path.splitext(filename)[0]
+    folder = os.path.dirname(os.path.dirname(filename)) +"\\results\\"
+    if not os.path.exists(folder):
+        os.makedirs(folder)
     newEmail = email.newHeader + email.newBody
-    file = open(filename + "tagged.txt", 'w')
+    file = open(folder + str(email.fileID) + ".txt", 'w')
     file.write(newEmail)
     file.close()
 
@@ -66,39 +55,36 @@ def loadInFile(filename,id):
 def evaluateMeasure(filename,e,id):
     file = e.getFileToTag(filename)
     email = loadInFile(file,id)
-    #e.getFromTagged("C:/Users/Ben/Documents/NLP/nltk_data/seminars_training/training/34.txt")
     e.evaluate(email)
     return e
 
-#loadInFile("C:/Users/Ben/Documents/NLP/nltk_data/Test/333.txt")
-#evaluateMeasure("C:\\Users\\Ben\\Documents\\NLP\\nltk_data\\seminars_training\\training\\3.txt")
-
 def evaluate():
+    st = StanfordNERTagger(model, jar, encoding='utf-8')
     ev = Evaluator.Evaluator()
     for i in range(1,301):
         print("File " + str(i))
-        e = evaluateMeasure("C:\\Users\\Ben\\Documents\\NLP\\nltk_data\\seminars_training\\training\\{}.txt".format(i),ev,i)
+        e = evaluateMeasure(dataDir + "\\seminars_training\\training\\{}.txt".format(i),ev,i)
     e.evalResults()
 
 def runOnto():
-    print("Loading model")
+    print("Loading model, please wait. (This may take a while)")
     model = KeyedVectors.load_word2vec_format(
-        "C:\\Users\\Ben\\Documents\\NLP\\nltk_data\\GoogleNews-vectors-negative300.bin",
+        dataDir + "\\GoogleNews-vectors-negative300.bin",
         binary=True)
     print("Model loaded")
-    for i in range(1, 10):
+    for i in range(0, 485):
         id = i
-        filename = "C:\\Users\\Ben\\Documents\\NLP\\nltk_data\\seminars_training\\training\\{}.txt".format(id)
+        print(id)
+        filename = dataDir + "\\seminars_training\\training\\{}.txt".format(id)
         ev = Evaluator.Evaluator()
         file = ev.getFileToTag(filename)
         email = loadInFile(file,id)
         tree = OntologyTree.tree
-        ont = OntologyTagger.OntologyTagger(email,model,tree)
+        ont = OntologyTagger.OntologyTagger(email,model,tree,dataDir)
         tree = ont.findOntTreeMatch(ont.keyWordsInTopic())
     ont.printTree(tree)
 
 
-
 evaluate()
-#
-runOnto()
+
+#runOnto()
