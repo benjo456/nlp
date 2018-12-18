@@ -75,7 +75,7 @@ def evaluateMeasure(filename,e,id):
 
 def evaluate():
     ev = Evaluator.Evaluator()
-    for i in range(0,300):
+    for i in range(1,301):
         print("File " + str(i))
         e = evaluateMeasure("C:\\Users\\Ben\\Documents\\NLP\\nltk_data\\seminars_training\\training\\{}.txt".format(i),ev,i)
     e.evalResults()
@@ -86,7 +86,7 @@ def runOnto():
         "C:\\Users\\Ben\\Documents\\NLP\\nltk_data\\GoogleNews-vectors-negative300.bin",
         binary=True)
     print("Model loaded")
-    for i in range(1, 300):
+    for i in range(1, 10):
         id = i
         filename = "C:\\Users\\Ben\\Documents\\NLP\\nltk_data\\seminars_training\\training\\{}.txt".format(id)
         ev = Evaluator.Evaluator()
@@ -95,8 +95,10 @@ def runOnto():
         tree = OntologyTree.tree
         ont = OntologyTagger.OntologyTagger(email,model,tree)
         tree = ont.findOntTreeMatch(ont.keyWordsInTopic())
+    ont.printTree(tree)
 
 
 
-#evaluate()
+evaluate()
+#
 runOnto()
