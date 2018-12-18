@@ -11,6 +11,7 @@ This program takes in a file, processes it and tags it, and then returns the ext
 
 dir = 'C:/Users/Ben/Documents/NLP/nltk_data/stanford-ner-2018-10-16'
 dataDir = 'C:\\Users\\Ben\\PycharmProjects\\nlp\\nltk_data'
+
 model = dir + '/classifiers/english.all.3class.distsim.crf.ser.gz'
 jar = dir + '/stanford-ner.jar'
 st = None
@@ -85,6 +86,8 @@ def runOnto():
     ont.printTree(tree)
 
 
+#### To run evaluation ####
 evaluate()
 
-#runOnto()
+#### To run ontology (takes a few minutes to run) ####
+runOnto()
